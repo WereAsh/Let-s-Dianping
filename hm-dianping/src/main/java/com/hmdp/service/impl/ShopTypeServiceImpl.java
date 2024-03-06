@@ -51,7 +51,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
             //不存在则返回一个空集合，解决缓存穿透
 
             stringRedisTemplate.opsForList().rightPushAll(CACHE_SHOP_TYPE_KEY,Collections.emptyList());
-            stringRedisTemplate.expire(CACHE_SHOP_TYPE_KEY,CACHE_SHOP_TTL,TimeUnit.MINUTES);
+            stringRedisTemplate.expire(CACHE_SHOP_TYPE_KEY,CACHE_NULL_TTL,TimeUnit.MINUTES);
 
             return Result.fail("商铺数据为空！");
         }
