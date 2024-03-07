@@ -9,6 +9,7 @@ import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisData;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -37,10 +38,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     StringRedisTemplate stringRedisTemplate;
+    @Resource
+    CacheClient cacheClient;
 
     @Override
     public Result queryById(Long id) {
 //        Shop shop = queryWithPassThrough(id);
+/*        Shop shop1=cacheClient.queryWithPassThrough(CACHE_SHOP_KEY,id,
+                Shop.class,this::getById,
+                CACHE_SHOP_TTL,TimeUnit.MINUTES);*/
         Shop shop = queryWithMutex(id);
         if(shop==null){
             return Result.fail("店铺id不存在!");
