@@ -1,17 +1,25 @@
 package com.hmdp.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Follow;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.FollowMapper;
 import com.hmdp.service.IFollowService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.service.IUserService;
 import com.hmdp.utils.UserHolder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.hmdp.utils.RedisConstants.FOLLOW_KEY;
 
@@ -28,6 +36,9 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
 
     @Resource
     StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    IUserService userService;
     @Override
     public Result follow(Long followUserId, Boolean isFollow) {
         Long userId = UserHolder.getUser().getId();
@@ -60,5 +71,27 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         Integer count = query().eq("user_id", userId).eq("follow_id", followUserId).count();
 
         return Result.ok(count>0);
+    }
+
+    @Override
+    public Result followCommons(Long followUserId) {
+        Long userId = UserHolder.getUser().getId();
+        String userKey=FOLLOW_KEY+userId;
+        String followKey=FOLLOW_KEY+userKey;
+        Set<String> commons = stringRedisTemplate.opsForSet().intersect(userKey, followKey);
+
+        if(commons==null||commons.isEmpty()){
+            return Result.ok(Collections.emptyList());
+        }
+        List<Long> commonsId = commons.stream()
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        List<UserDTO> userDTOS = userService.listByIds(commonsId)
+                .stream()
+                .map(user -> BeanUtil.copyProperties(user, UserDTO.class))
+                .collect(Collectors.toList());
+
+        return Result.ok(userDTOS);
     }
 }
