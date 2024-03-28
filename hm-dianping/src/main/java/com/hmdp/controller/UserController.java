@@ -83,4 +83,9 @@ public class UserController {
         // 返回
         return Result.ok(info);
     }
+
+    @GetMapping("/user/sign")
+    public Result sign(){
+        return userService.sign();
+    }
 }
